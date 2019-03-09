@@ -13,13 +13,23 @@ style.use("ggplot")
 from matplotlib.widgets import Slider
 from matplotlib.widgets import TextBox
 
+###
+# Program: Arduino communication
+# Author: Jordan Martin
+# Version: 0.1
+# Date Created: 8 March 2019
+# Description: Used to communicate between the arduinos and the computer... will eventually graph real time data
+# Last Edited By: Jordan Martin
+# Last Edited: 9 March 2019
+# Reason Edited: creation and code documentation
+###
 #global variables here
 root = Tk()
 
 # custom classes/functions here
-class ArduinoCommunicator():
+class ArduinoCommunicator(): # class to communicate with plugged in arduino through serial monitor
     def __init__(self, port):
-        self.ser = serial.Serial(port, 115200)
+        self.ser = serial.Serial(port, 9600)
 
     def readData(self):
         return self.ser.readline().decode('utf-8')
@@ -33,7 +43,7 @@ class ArduinoCommunicator():
     def kill(self):
         self.ser.close()
 
-class Graph():
+class Graph(): # graph and GUI class for real time graphs
     ts = []
     xDat = []
     yDat = []
@@ -110,12 +120,15 @@ class Graph():
         self.l1.set_color("black")
         self.canvas.draw()
 
-def main():
+def main(): # main function to run
     #execute code here
-    liveGraph = Graph(root, [0, 1, 2], [0, 10, 20])
+    # liveGraph = Graph(root, [0, 1, 2], [0, 10, 20])
     # ani = animation.FuncAnimation(liveGraph.fig, liveGraph.animate, fargs=(x,, y,), interval=50, blit=True)
     # plt.show()
-    root.mainloop()
+    # root.mainloop()
+    while(arduino.isAvailable()): # continue while the arduino is active
+        newDat = arduino.readData() # get incoming data
+        print(newDat) # show incoming data
 
-# arduino = ArduinoCommunicator("PORT HERE");
-main();
+arduino = ArduinoCommunicator("/dev/ttyUSB0"); # set up arduino on corresponding port
+main(); # run main function
