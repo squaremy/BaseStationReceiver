@@ -1,7 +1,7 @@
 # import stuff here
 import serial
 from tkinter import *
-# import _thread
+import _thread
 import matplotlib
 matplotlib.use("TkAgg")
 from matplotlib.figure import Figure
@@ -44,7 +44,7 @@ class ArduinoCommunicator(): # class to communicate with plugged in arduino thro
         self.ser.close()
 
 class Graph(): # graph and GUI class for real time graphs
-    ts = []
+    ts = [1, 2, 3]
     xDat = []
     yDat = []
     def __init__(self, master, x, y):
@@ -60,8 +60,8 @@ class Graph(): # graph and GUI class for real time graphs
         self.xDat = x
         self.yDat = y
         # self.line, = self.ax.plot(self.xDat, self.yDat)
-        self.plotGraph(1)
         self.createGraph()
+        self.plotGraph(1)
         self.master.bind("<Escape>", self.end_fullscreen)
 
     def end_fullscreen(self, event=None):
@@ -88,9 +88,9 @@ class Graph(): # graph and GUI class for real time graphs
         self.ax1 = self.f.add_axes([.55, .625, .4, .35], frameon=False, label='Y Orientation')
         self.ax1.set_xlabel('Time (ms)')
         self.ax1.set_ylabel('Degree')
+        self.ax1.grid(color='r', linestyle='-', linewidth=2)
         self.sliderAxis = self.f.add_axes([.075, .525, .325, .025])
         self.sliderAxis1 = self.f.add_axes([.6, .525, .325, .025])
-        self.sliderAxis2 = self.f.add_axes([.35, .025, .325, .025])
         self.canvas = FigureCanvasTkAgg(self.f, master=self.frame)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=True)
@@ -110,25 +110,35 @@ class Graph(): # graph and GUI class for real time graphs
         # arduino.writeData("Lat:" + str(self.slider.val))
         # arduino.writeData("Lng:" + str(self.slider1.val))
         self.line, = self.ax0.plot(self.ts,xData)
+        self.line.visible = True
         self.line.set_color("blue")
         self.line1, = self.ax1.plot(self.ts,yData)
+        self.line1.visible = True
         self.line1.set_color("blue")
-        self.addOrientationData()
-        self.l, = self.ax0.plot(self.ts, self.ox)
-        self.l.set_color("black")
-        self.l1, = self.ax1.plot(self.ts, self.oy)
-        self.l1.set_color("black")
+        # self.addOrientationData()
+        # self.l, = self.ax0.plot(self.ts, self.ox)
+        # self.l.set_color("black")
+        # self.l1, = self.ax1.plot(self.ts, self.oy)
+        # self.l1.set_color("black")
         self.canvas.draw()
+
+def updateGraph():
+    for i in range(0, len(liveGraph.ts)):
+        liveGraph.ts[i] = liveGraph.ts[i]+1;
+    liveGraph.line.linestyle = 'None'
+    liveGraph.line1.linestyle = 'None'
+    liveGraph.plotGraph(1)
 
 def main(): # main function to run
     #execute code here
-    # liveGraph = Graph(root, [0, 1, 2], [0, 10, 20])
     # ani = animation.FuncAnimation(liveGraph.fig, liveGraph.animate, fargs=(x,, y,), interval=50, blit=True)
     # plt.show()
-    # root.mainloop()
-    while(arduino.isAvailable()): # continue while the arduino is active
-        newDat = arduino.readData() # get incoming data
-        print(newDat) # show incoming data
+    _thread.start_new_thread(updateGraph, ())
+    root.mainloop()
+    # while(arduino.isAvailable()): # continue while the arduino is active
+        # newDat = arduino.readData() # get incoming data
+        # print(newDat) # show incoming data
 
-arduino = ArduinoCommunicator("/dev/ttyUSB0"); # set up arduino on corresponding port
+liveGraph = Graph(root, [0, 1, 2], [0, 10, 20])
+# arduino = ArduinoCommunicator("/dev/ttyUSB0"); # set up arduino on corresponding port
 main(); # run main function
