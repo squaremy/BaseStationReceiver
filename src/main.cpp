@@ -8,8 +8,8 @@
  * Date Created: 5 March 2019
  * Description: Receives information from the payload through a radio
  * Last Edited By: Jordan Martin
- * Last Edited: 9 March 2019
- * Reason Edited: Changed to reading pipe instead of writing pipe
+ * Last Edited: 11 March 2019
+ * Reason Edited: Data testing for python graphs
  */
 RF24 radio(7, 8);
 const byte address[6] = "00001";
@@ -24,10 +24,19 @@ void setup() {
   Serial.println("Listening...");
 }
 
+float x = 10.2, y = 18.7;
 void loop() {
-  while(radio.available()){ // continue while the radio is active
-    char datIn[100] = ""; // create data in buffer
-    radio.read(&datIn, sizeof(datIn)); // obtain incoming data
-    Serial.println(datIn); // log incoming data to serial monitor
+  // while(radio.available()){ // continue while the radio is active
+  //   char datIn[100] = ""; // create data in buffer
+  //   radio.read(&datIn, sizeof(datIn)); // obtain incoming data
+  //   Serial.println(datIn); // log incoming data to serial monitor
+  // }
+  x += 0.3;
+  y = 2*y;
+  String blah = String(x, sizeof(x)/sizeof(float)) + "," + String(y, sizeof(y)/sizeof(float));
+  char text[100] = "";
+  for(int i = 0; i < blah.length(); i++) {
+    text[i] = blah.charAt(i);
   }
+  Serial.println(text);
 }

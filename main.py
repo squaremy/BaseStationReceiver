@@ -1,17 +1,13 @@
 # import stuff here
 import serial
-# from tkinter import *
 import _thread
 import matplotlib
-# matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.backend_bases import key_press_handler
 import matplotlib.animation as animation
 from matplotlib import style
 style.use("ggplot")
-# from matplotlib.widgets import Slider
-# from matplotlib.widgets import TextBox
 
 ###
 # Program: Arduino communication
@@ -20,11 +16,10 @@ style.use("ggplot")
 # Date Created: 8 March 2019
 # Description: Used to communicate between the arduinos and the computer... will eventually graph real time data
 # Last Edited By: Jordan Martin
-# Last Edited: 10 March 2019
-# Reason Edited: Working on live graph with arduino data... live graphs working, adding arduino data to base off of
+# Last Edited: 11 March 2019
+# Reason Edited: Successfully parses arduino data in the format xx.xxx,yy.yyy and animates the graph
 ###
 #global variables here
-# root = Tk()
 x = [0, 1]
 y = [0, 1]
 
@@ -52,25 +47,25 @@ class Graph(): # graph and GUI class for real time graphs
     def __init__(self):
         self.fig = plt.figure()
         self.ax = self.fig.add_subplot(1, 1, 1)
-        # self.ax.set_ylim([0, 50])
-        # self.line, = self.ax.plot(self.xDat, self.yDat)
 
     def animate(self, i, x, y):
         datIn = arduino.readData()
-        nx = float(datIn[0:datIn.index(",")])
-        ny = float(datIn[datIn.index(",")+1:])
-        print(nx)
-        print(ny)
-        x.append(nx)
-        y.append(ny)
-        self.ax.clear()
-        self.ax.plot(x, y)
+        print(datIn)
+        if "," in datIn:
+            nx = float(datIn[0:datIn.index(",")])
+            ny = float(datIn[datIn.index(",")+1:])
+            print(nx)
+            print(ny)
+            x.append(nx)
+            y.append(ny)
+            self.ax.clear()
+            self.ax.plot(x, y)
 
 def main(): # main function to run
     #execute code here
     liveGraph = Graph()
-    arduino = ArduinoCommunicator("/dev/ttyUSB0"); # set up arduino on corresponding port
     ani = animation.FuncAnimation(liveGraph.fig, liveGraph.animate, fargs=(x, y), interval=25)
     plt.show()
 
+arduino = ArduinoCommunicator("/dev/ttyUSB0"); # set up arduino on corresponding port
 main(); # run main function
