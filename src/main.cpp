@@ -26,17 +26,17 @@ void setup() {
 
 float x = 10.2, y = 18.7;
 void loop() {
-  // while(radio.available()){ // continue while the radio is active
-  //   char datIn[100] = ""; // create data in buffer
-  //   radio.read(&datIn, sizeof(datIn)); // obtain incoming data
-  //   Serial.println(datIn); // log incoming data to serial monitor
-  // }
-  x += 0.3;
-  y = 2*y;
-  String blah = String(x, sizeof(x)/sizeof(float)) + "," + String(y, sizeof(y)/sizeof(float));
-  char text[100] = "";
-  for(int i = 0; i < blah.length(); i++) {
-    text[i] = blah.charAt(i);
+  while(radio.available()){ // continue while the radio is active
+    char datIn[100] = ""; // create data in buffer
+    radio.read(&datIn, sizeof(datIn)); // obtain incoming data
+    Serial.println(datIn); // log incoming data to serial monitor
   }
-  Serial.println(text);
+  // x += 0.3;
+  // y = 2*y;
+  // String blah = String(x, sizeof(x)/sizeof(float)) + "," + String(y, sizeof(y)/sizeof(float));
+  // char text[100] = "";
+  // for(int i = 0; i < blah.length(); i++) {
+  //   text[i] = blah.charAt(i);
+  // }
+  // Serial.println(text);
 }

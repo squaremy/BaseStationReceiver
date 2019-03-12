@@ -20,8 +20,8 @@ style.use("ggplot")
 # Reason Edited: Successfully parses arduino data in the format xx.xxx,yy.yyy and animates the graph
 ###
 #global variables here
-x = [0, 1]
-y = [0, 1]
+x = []
+y = []
 
 # custom classes/functions here
 class ArduinoCommunicator(): # class to communicate with plugged in arduino through serial monitor
@@ -41,9 +41,6 @@ class ArduinoCommunicator(): # class to communicate with plugged in arduino thro
         self.ser.close()
 
 class Graph(): # graph and GUI class for real time graphs
-    ts = [1, 2, 3]
-    xDat = []
-    yDat = []
     def __init__(self):
         self.fig = plt.figure()
         self.ax = self.fig.add_subplot(1, 1, 1)
@@ -53,18 +50,21 @@ class Graph(): # graph and GUI class for real time graphs
         print(datIn)
         if "," in datIn:
             nx = float(datIn[0:datIn.index(",")])
-            ny = float(datIn[datIn.index(",")+1:])
+            if "-" in datIn[datIn.index(",")+1:]:
+                ny = float(datIn[datIn.index(",")+1:datIn.index(",")+11])
+            else:
+                ny = float(datIn[datIn.index(",")+1:datIn.index(",")+10])
             print(nx)
             print(ny)
             x.append(nx)
             y.append(ny)
-            self.ax.clear()
+            # self.ax.clear()
             self.ax.plot(x, y)
 
 def main(): # main function to run
     #execute code here
     liveGraph = Graph()
-    ani = animation.FuncAnimation(liveGraph.fig, liveGraph.animate, fargs=(x, y), interval=25)
+    ani = animation.FuncAnimation(liveGraph.fig, liveGraph.animate, fargs=(x, y), interval=15)
     plt.show()
 
 arduino = ArduinoCommunicator("/dev/ttyUSB0"); # set up arduino on corresponding port
