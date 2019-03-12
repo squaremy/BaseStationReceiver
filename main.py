@@ -17,7 +17,7 @@ style.use("ggplot")
 # Description: Used to communicate between the arduinos and the computer... will eventually graph real time data
 # Last Edited By: Jordan Martin
 # Last Edited: 11 March 2019
-# Reason Edited: Successfully parses arduino data in the format xx.xxx,yy.yyy and animates the graph
+# Reason Edited: GPS graph working as intended, need to add filter for garbled data
 ###
 #global variables here
 x = []
