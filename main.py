@@ -22,6 +22,8 @@ style.use("ggplot")
 #global variables here
 x = [] # list of x values
 y = [] # list of y values
+altitude = [] # list of altitudes
+timestamp = [] # list of timestamps
 
 # custom classes/functions here
 class ArduinoCommunicator(): # class to communicate with plugged in arduino through serial monitor
@@ -43,12 +45,13 @@ class ArduinoCommunicator(): # class to communicate with plugged in arduino thro
 class Graph(): # graph and GUI class for real time graphs
     def __init__(self): # constructor
         self.fig = plt.figure() # create figure window
-        self.ax = self.fig.add_subplot(1, 1, 1) # add axes to figure
+        self.ax = self.fig.add_subplot(211) # add axes to figure
+        self.altAx = self.fig.add_subplot(212)
 
     def animate(self, i, x, y):
         datIn = arduino.readData() # receive data from arduino
         print(datIn) # log data to computer printout
-        if "LX:" in datIn and "LY:" in datIn and "*" in datIn: # check if the message isn't garbled
+        if "LX:" in datIn and "LY:" in datIn and "*" in datIn: # check if the message isn't garbled and is location
             # NOTE: -- chop off last dec to decrease accuracy (it was too accurate... moving while sitting still)
             nx = float(datIn[datIn.index("LX:")+3:datIn.index("LY:")-1]) # get the new x coord of the location
             ny = float(datIn[datIn.index("LY:")+3:datIn.index("*")-1]) # get y coord
@@ -58,6 +61,15 @@ class Graph(): # graph and GUI class for real time graphs
             y.append(ny) # add new y coord to y values
             # self.ax.clear()
             self.ax.plot(x, y) # plot x and y data as lines
+        elif "PA:" in datIn and "TS:" in datIn and "*" in datIn: # check if message isn't garbled and is altitude
+            nAlt = float(datIn[datIn.index("PA:")+3:datIn.index("TS:")]) # get new altitude
+            ts = float(datIn[datIn.index("TS:")+3:datIn.index("*")]) # get new timestamp
+            print(nAlt) # log altitude
+            print(ts) # log timestamp
+            altitude.append(nAlt) # add new altitude to altitude list
+            timestamp.append(ts) # add timestamp to timestamp list
+            self.altAx.clear() # clear prev alt graph
+            self.altAx.plot(timestamp, altitude) # plot new alt graph
 
 def main(): # main function to run
     #execute code here
