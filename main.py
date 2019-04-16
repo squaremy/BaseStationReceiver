@@ -48,6 +48,17 @@ class Graph(): # graph and GUI class for real time graphs
         self.ax = self.fig.add_subplot(211) # add axes to figure
         self.altAx = self.fig.add_subplot(212)
 
+    def checkIfGoodLocation(self, x, y):
+        if(len(x) > 1 and len(y) > 1):
+            distToLoc = sqrt((x[len(x)-1] - x[len(x)-2])**2 + (y[len(y)-1] y[len(y)-2])**2)
+            if(distToLoc > 1):
+                x.pop()
+                y.pop()
+                return False
+            return True
+        return True
+
+
     def animate(self, i, x, y):
         datIn = arduino.readData() # receive data from arduino
         print(datIn) # log data to computer printout
@@ -59,6 +70,8 @@ class Graph(): # graph and GUI class for real time graphs
             print(ny) # log y coord
             x.append(nx) # add new x coord to x values
             y.append(ny) # add new y coord to y values
+            goodLoc = checkIfGoodLocation(x, y) # TODO: test
+            print(goodLoc) # TODO: test
             # self.ax.clear()
             self.ax.plot(x, y) # plot x and y data as lines
         elif "PA:" in datIn and "TS:" in datIn and "*" in datIn: # check if message isn't garbled and is altitude
@@ -79,3 +92,4 @@ def main(): # main function to run
 
 arduino = ArduinoCommunicator("/dev/ttyUSB0"); # set up arduino on corresponding port
 main(); # run main function
+# NOTE: should be able to just stick this into tkinter to add buttons for rocket tests/launches
