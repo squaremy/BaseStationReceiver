@@ -26,10 +26,6 @@ from tkinter import *
 # Reason Edited: Weird data sort of filtered... added checksum
 ###
 #global variables here
-x = [] # list of x values
-y = [] # list of y values
-altitude = [] # list of altitudes
-timestamp = [] # list of timestamps
 LARGE_FONT = ("Verdana", 12)
 
 # custom classes/functions here
@@ -50,34 +46,26 @@ class ArduinoCommunicator(): # class to communicate with plugged in arduino thro
         self.ser.close() # close serial monitor
 
 class Graph(): # graph and GUI class for real time graphs
+    altitude = []
+    altTs = []
+    acceleration = []
+    velocity = [0]
+    xyAccel = []
+    xyVel = [0]
+    velTs = []
+    x = []
+    y = []
+    distance = [0]
+    trajDeltaAlt = [0]
+    curTrajPos = 0
     def __init__(self): # constructor
-        self.fig = plt.figure() # create figure window
-        self.ax = self.fig.add_subplot(211) # add axes to figure
-        self.altAx = self.fig.add_subplot(212)
-
-    def animate(self, i, x, y):
-        datIn = arduino.readData() # receive data from arduino
-        print(datIn) # log data to computer printout
-        if "AX:" in datIn and "AY:" in datIn and "AZ:" in datIn and "*" in datIn: # check if the message isn't garbled and is location
-            # FIND VELOCITY VECTOR
-            xAccel = float(datIn[datIn.index("AX:")+3:datIn.index("AY:")])
-            yAccel = float(datIn[datIn.index("AY:")+3:datIn.index("AZ:")])
-            zAccel = float(datIn[datIn.index("AZ:")+3:datIn.index("*")])
-            accel = sqrt(xAccel ** 2 + yAccel ** 2 + zAccel ** 2)
-        elif "PA:" in datIn and "TS:" in datIn and "*" in datIn: # check if message isn't garbled and is altitude
-            nAlt = float(datIn[datIn.index("PA:")+3:datIn.index("TS:")]) # get new altitude
-            ts = float(datIn[datIn.index("TS:")+3:datIn.index("*")]) # get new timestamp
-            print(nAlt) # log altitude
-            print(ts) # log timestamp
-            altitude.append(nAlt) # add new altitude to altitude list
-            timestamp.append(ts) # add timestamp to timestamp list
-            self.altAx.clear() # clear prev alt graph
-            self.altAx.plot(timestamp, altitude) # plot new alt graph
-
-class LocationGraph():
-    def __init__(self):
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(111)
+        self.velFig = plt.figure(1) # create figure window
+        self.velAx = self.velFig.add_subplot(211) # add axes to figure
+        self.altAx = self.velFig.add_subplot(212) # add second axes
+        self.trajFig = plt.figure(2)
+        self.trajAx = self.trajFig.add_subplot(111)
+        self.locFig = plt.figure(3)
+        self.locAx = self.locFig.add_subplot(111)
 
     def checkIfGoodLocation(self, x, y):
         if(len(x) > 1 and len(y) > 1):
@@ -89,21 +77,67 @@ class LocationGraph():
             return True
         return True
 
-    def animate(self, i, x, y):
+    def predictRemaindingTrajectory(self):
+        print("predict trajectory here")
+
+
+    def updateTrajectory(self):
+        if len(self.xyVel) > 1 and len(self.velTs) > 1 and len(self.altitude) > 1:
+            newDist = 0.5 * (self.velTs[len(self.velTs)-1] - self.velTs[len(self.velTs)-2]) * (self.xyVel[len(self.xyVel)-1]+self.xyVel[len(self.xyVel)-2])
+            self.distance.append(newDist)
+            deltaAlt = self.altitude[len(self.altitude)-1] - self.altitude[len(altitude)-2]
+            self.trajDeltaAlt.append(deltaAlt)
+            self.curTrajPos += 1
+            while(len(self.distance)-1 > self.curTrajPos):
+                self.distance.pop()
+            while(len(self.trajDeltaAlt)-1 > self.curTrajPos):
+                self.trajDeltaAlt.pop()
+            self.predictRemaindingTrajectory()
+            self.trajAx.clear()
+            self.trajAx.plot(self.distance, self.trajDeltaAlt)
+
+
+    def animate(self, i):
         datIn = arduino.readData() # receive data from arduino
         print(datIn) # log data to computer printout
-        if "LX:" in datIn and "LY:" in datIn and "*" in datIn: # check if the message isn't garbled and is location
+        if "AX:" in datIn and "AY:" in datIn and "AZ:" in datIn and "TS:" in datIn and "*" in datIn: # check if the message isn't garbled and is location
+            # FIND VELOCITY VECTOR
+            xAccel = float(datIn[datIn.index("AX:")+3:datIn.index("AY:")])
+            yAccel = float(datIn[datIn.index("AY:")+3:datIn.index("AZ:")])
+            zAccel = float(datIn[datIn.index("AZ:")+3:datIn.index("TS:")])
+            ts = float(datIn[datIn.index("TS:")+3:datIn.index("*")])
+            self.velTs.append(ts)
+            accel = sqrt(xAccel ** 2 + yAccel ** 2 + zAccel ** 2)
+            self.xyAccel.append(sqrt(xAccel**2 + yAccel**2))
+            self.acceleration.append(accel)
+            if len(self.acceleration) > 1:
+                newVel = 0.5 * (self.velTs[len(self.velTs)-1] - self.velTs[len(self.velTs)-2]) * (self.acceleration[len(self.acceleration)-1]+self.acceleration[len(self.acceleration)-2]) # trapezoidal area
+                self.velocity.append(newVel)
+            if len(self.xyAccel) > 1:
+                newXYVel = 0.5 * (self.velTs[len(self.velTs)-1] - self.velTs[len(self.velTs)-2]) * (self.xyAccel[len(self.xyAccel)-1]+self.xyAccel[len(self.xyAccel)-2]) # trapezoidal area
+            self.velAx.clear()
+            self.velAx.plot(self.velTs, self.velocity)
+        elif "PA:" in datIn and "TS:" in datIn and "*" in datIn: # check if message isn't garbled and is altitude
+            nAlt = float(datIn[datIn.index("PA:")+3:datIn.index("TS:")]) # get new altitude
+            ts = float(datIn[datIn.index("TS:")+3:datIn.index("*")]) # get new timestamp
+            print(nAlt) # log altitude
+            print(ts) # log timestamp
+            self.altitude.append(nAlt) # add new altitude to altitude list
+            self.altTs.append(ts) # add timestamp to timestamp list
+            self.altAx.clear() # clear prev alt graph
+            self.altAx.plot(self.altTs, self.altitude) # plot new alt graph
+        elif "LX:" in datIn and "LY:" in datIn and "*" in datIn: # check if the message isn't garbled and is location
             # NOTE: -- chop off last dec to decrease accuracy (it was too accurate... moving while sitting still)
             nx = float(datIn[datIn.index("LX:")+3:datIn.index("LY:")-1]) # get the new x coord of the location
             ny = float(datIn[datIn.index("LY:")+3:datIn.index("*")-1]) # get y coord
             print(nx) # log x coord
             print(ny) # log y coord
-            x.append(nx) # add new x coord to x values
-            y.append(ny) # add new y coord to y values
-            goodLoc = checkIfGoodLocation(x, y) # TODO: test
+            self.x.append(nx) # add new x coord to x values
+            self.y.append(ny) # add new y coord to y values
+            goodLoc = checkIfGoodLocation(self.x, self.y) # TODO: test
             print(goodLoc) # TODO: test
             # self.ax.clear()
-            self.ax.plot(x, y) # plot x and y data as lines
+            self.locAx.plot(self.x, self.y) # plot x and y data as lines
 
 class Application(tk.Tk):
     def __init__(self, *args, **kwargs):
@@ -114,7 +148,7 @@ class Application(tk.Tk):
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
         self.frames = {}
-        for F in (StartPage, PageOne, PageTwo, PageThree, PageFour):
+        for F in (StartPage, PageOne, PageTwo, PageThree, PageFour, PageFive):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -126,7 +160,7 @@ class Application(tk.Tk):
 
 class StartPage(tk.Frame):
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self,parent)
+        tk.Frame.__init__(self, parent)
         label = tk.Label(self, text="Start Page", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
         button = ttk.Button(self, text="Control Page",
@@ -141,6 +175,9 @@ class StartPage(tk.Frame):
         button4 = ttk.Button(self, text="Graph Page 2",
                             command=lambda: controller.show_frame(PageFour))
         button4.pack()
+        button5 = ttk.Button(self, text="Graph Page 3",
+                            command=lambda: controller.show_frame(PageFive))
+        button5.pack()
 
 class PageOne(tk.Frame):
     def __init__(self, parent, controller):
@@ -161,7 +198,12 @@ class PageOne(tk.Frame):
 
 class PageTwo(tk.Frame):
     def __init__(self, parent, controller):
-        print("testing")
+        tk.Frame.__init__(self, parent)
+        label = tk.Label(self, text="Control Page!", font=LARGE_FONT)
+        label.pack(pady=10,padx=10)
+        button1 = ttk.Button(self, text="Back to Home",
+                            command=lambda: controller.show_frame(StartPage))
+        button1.pack(side=TOP)
 
 class PageThree(tk.Frame):
     def __init__(self, parent, controller):
@@ -171,7 +213,7 @@ class PageThree(tk.Frame):
         button1 = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(StartPage))
         button1.pack()
-        canvas = FigureCanvasTkAgg(liveGraph.fig, self)
+        canvas = FigureCanvasTkAgg(liveGraph.velFig, self)
         canvas.show()
         canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
         toolbar = NavigationToolbar2TkAgg(canvas, self)
@@ -186,7 +228,22 @@ class PageFour(tk.Frame):
         button1 = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(StartPage))
         button1.pack()
-        canvas = FigureCanvasTkAgg(locGraph.fig, self)
+        canvas = FigureCanvasTkAgg(liveGraph.locFig, self)
+        canvas.show()
+        canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+        toolbar = NavigationToolbar2TkAgg(canvas, self)
+        toolbar.update()
+        canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+class PageFive(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        label = tk.Label(self, text="Graph Page!", font=LARGE_FONT)
+        label.pack(pady=10,padx=10)
+        button1 = ttk.Button(self, text="Back to Home",
+                            command=lambda: controller.show_frame(StartPage))
+        button1.pack()
+        canvas = FigureCanvasTkAgg(liveGraph.trajFig, self)
         canvas.show()
         canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
         toolbar = NavigationToolbar2TkAgg(canvas, self)
@@ -195,13 +252,12 @@ class PageFour(tk.Frame):
 
 def main(): # main function to run
     #execute code here
-    ani = animation.FuncAnimation(liveGraph.fig, liveGraph.animate, fargs=(x, y), interval=15) # handles making it in "real time"
+    ani = animation.FuncAnimation(liveGraph.velFig, liveGraph.animate, fargs=(), interval=15) # handles making it in "real time"
     app = Application()
     app.mainloop()
     # plt.show() # show graph
 
 # arduino = ArduinoCommunicator("/dev/ttyUSB0"); # set up arduino on corresponding port
 liveGraph = Graph() # create graph
-locGraph = LocationGraph()
 main(); # run main function
 # NOTE: should be able to just stick this into tkinter to add buttons for rocket tests/launches
