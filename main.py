@@ -61,6 +61,9 @@ class Graph(): # graph and GUI class for real time graphs
         if "AX:" in datIn and "AY:" in datIn and "AZ:" in datIn and "*" in datIn: # check if the message isn't garbled and is location
             # FIND VELOCITY VECTOR
             xAccel = float(datIn[datIn.index("AX:")+3:datIn.index("AY:")])
+            yAccel = float(datIn[datIn.index("AY:")+3:datIn.index("AZ:")])
+            zAccel = float(datIn[datIn.index("AZ:")+3:datIn.index("*")])
+            accel = sqrt(xAccel ** 2 + yAccel ** 2 + zAccel ** 2)
         elif "PA:" in datIn and "TS:" in datIn and "*" in datIn: # check if message isn't garbled and is altitude
             nAlt = float(datIn[datIn.index("PA:")+3:datIn.index("TS:")]) # get new altitude
             ts = float(datIn[datIn.index("TS:")+3:datIn.index("*")]) # get new timestamp
@@ -111,7 +114,7 @@ class Application(tk.Tk):
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
         self.frames = {}
-        for F in (StartPage, PageOne, PageThree, PageFour):
+        for F in (StartPage, PageOne, PageTwo, PageThree, PageFour):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
