@@ -306,15 +306,15 @@ class PageTwo(tk.Frame):
         button1 = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(StartPage, 0))
         button1.pack(side=TOP)
-        button2 = Button(self, text="DEPLOY PARACHUTE", font=("Verdana", 24), width=10, command=lambda:controller.deployChute())
+        button2 = Button(self, text="DEPLOY PARACHUTE", font=("Verdana", 24), width=17, command=lambda:controller.deployChute())
         button2.place(relx=0.25, rely=0.35, anchor=CENTER)
-        button3 = Button(self, text="TOGGLE CAMERA", font=("Verdana", 24), width=10, command=lambda:controller.toggleCamera())
+        button3 = Button(self, text="TOGGLE CAMERA", font=("Verdana", 24), width=15, command=lambda:controller.toggleCamera())
         button3.place(relx=0.75, rely=0.35, anchor=CENTER)
-        button4 = Button(self, text="WRITE TO SD", font=("Verdana", 24), width=10, command=lambda:controller.writeToSD())
-        buttom4.place(relx=0.15, rely=0.7, anchor=CENTER)
-        button5 = Button(self, text="RECEIVE GRAPH DATA", font("Verdana", 24), width=10, command=lambda:controller.receiveGraphData())
+        button4 = Button(self, text="WRITE TO SD", font=("Verdana", 24), width=11, command=lambda:controller.writeToSD())
+        button4.place(relx=0.15, rely=0.7, anchor=CENTER)
+        button5 = Button(self, text="RECEIVE GRAPH DATA", font=("Verdana", 24), width=18, command=lambda:controller.receiveGraphData())
         button5.place(relx=0.5, rely=0.7, anchor=CENTER)
-        button6 = Button(self, text="TOGGLE BUZZER", font("Verdana", 24), width=10, command=lambda:controller.toggleBuzzer())
+        button6 = Button(self, text="TOGGLE BUZZER", font=("Verdana", 24), width=15, command=lambda:controller.toggleBuzzer())
         button6.place(relx=0.85, rely=0.7, anchor=CENTER)
 
 class PageThree(tk.Frame):
